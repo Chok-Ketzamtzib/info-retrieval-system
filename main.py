@@ -101,7 +101,7 @@ for word in query:
         different_words.append(word.lower())
     else:
         connecting_words.append(word.lower())
-print(connecting_words)
+print("Connecting Words: \n", connecting_words)
 total_files = len(files_with_index)
 zeroes_and_ones = []
 zeroes_and_ones_of_all_words = []
@@ -109,7 +109,7 @@ for word in (different_words):
     if word.lower() in unique_words_all:
         zeroes_and_ones = [0] * total_files
         linkedlist = linked_list_data[word].head
-        print(word)
+        print("word: ", word)
         while linkedlist.nextval is not None:
             zeroes_and_ones[linkedlist.nextval.doc - 1] = 1
             linkedlist = linkedlist.nextval
@@ -118,7 +118,6 @@ for word in (different_words):
         print(word," not found")
         sys.exit()
         
-print(zeroes_and_ones_of_all_words)
 
 for word in connecting_words:
     word_list1 = zeroes_and_ones_of_all_words[0]
@@ -143,7 +142,7 @@ for word in connecting_words:
         zeroes_and_ones_of_all_words.insert(0, bitwise_op);
         
 files = []    
-print(zeroes_and_ones_of_all_words)
+print("zeros and ones of all words in query: \n", zeroes_and_ones_of_all_words)
 lis = zeroes_and_ones_of_all_words[0]
 cnt = 1
 for index in lis:
@@ -151,4 +150,4 @@ for index in lis:
         files.append(files_with_index[cnt])
     cnt = cnt+1
     
-print(files)
+print("files where query is found: \n", files)
