@@ -4,6 +4,7 @@ Created on Sat Feb 12 23:11:28 2022
 
 @author: William J. Wakefield
 @author: CJ Bauer
+@author: Kenneth Trelfa
 
 The system should:
 o Create the inverted index (the dictionary and postings lists) for your collection of documents
@@ -22,6 +23,7 @@ occurrence.
 5) Create postings and assign a term frequency to every document in postings list.
 6) Provide a simple GUI to test the system.
 """
+
 import nltk
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer, PorterStemmer
@@ -34,9 +36,6 @@ from PyQt5.QtWidgets import QMainWindow, QApplication, QLabel, QTextEdit, QPushB
 from PyQt5 import uic
 import sys
 
-Stopwords = set(stopwords.words('english'))
-
-
 class UI(QMainWindow):
     def __init__(self):
         super(UI, self).__init__()
@@ -44,14 +43,32 @@ class UI(QMainWindow):
         #Load UI file
         uic.loadUi("IRSystem.ui", self)
         
+        self.textedit = self.findChild(QTextEdit,"searchBox")
+        
+        self.searchbutton = self.findChild(QPushButton,"searchButton")
+        
+        self.searchbutton.clicked.connect(self.clickedBtn)
+        
         #Show the app
         self.show()
-    
-    
-#initialize app
+        
+    def clickedBtn(self):
+        #self.textedit.setPlainText("testy")
+        my_query(self.textedit.toPlainText())
+        
+
+# Init
+
 app = QApplication(sys.argv)
 UIWindow = UI()
-app.exec_()
+
+#searchButton = QPushButton('searchButton')
+#searchText = QTextEdit('searchBox')
+
+# ---
+
+Stopwords = set(stopwords.words('english'))
+
 def finding_all_unique_words_and_freq(words):
     words_unique = []
     word_freq = {}
@@ -64,7 +81,9 @@ def finding_all_unique_words_and_freq(words):
 
 def finding_freq_of_word_in_doc(word,words):
     freq = words.count(word)
-        
+
+# parameter: document specific array of words
+# return: pre-processed array, no special characters
 def remove_special_characters(text):
     regex = re.compile('[^a-zA-Z0-9\s]')
     text_returned = re.sub(regex,'',text)
@@ -81,123 +100,165 @@ class SlinkedList:
         self.head = head
         
  #find unique words from each doc in the dataset       
+
 all_words = []
 dict_global = {}
 file_folder = 'data/*'
 
-idx = 1
-files_with_index = {}
-for file in glob.glob(file_folder):
-    print(file)
-    fname = file
-    file = open(file , "r")
-    text = file.read()
-    text = remove_special_characters(text) 
-    text = re.sub(re.compile('\d'),'',text)
-    sentences = sent_tokenize(text)
-    words = word_tokenize(text)
-    words = [word for word in words if len(words)>1]
-    words = [word.lower() for word in words]
-    words = [word for word in words if word not in Stopwords]
-    dict_global.update(finding_all_unique_words_and_freq(words))
-    files_with_index[idx] = os.path.basename(fname)
-    idx = idx + 1
+files_with_index = {} # 1st
+unique_words_all = {} # might not copy array properly
+word_freq_in_doc = {} # no loop
+linked_list_data = {} # 2nd
+
+def the_whole_program():
+    idx = 1
+    #files_with_index = {}
+    for file in glob.glob(file_folder):
+        print(file)
+        fname = file
+        file = open(file , "r")
+        
+        text = file.read()
+        text = remove_special_characters(text) 
+        text = re.sub(re.compile('\d'),'',text)
+        
+        sentences = sent_tokenize(text)
+        
+        words = word_tokenize(text)
+        words = [word for word in words if len(words)>1]
+        words = [word.lower() for word in words]
+        words = [word for word in words if word not in Stopwords]
+        
+        dict_global.update(finding_all_unique_words_and_freq(words))
+        
+        files_with_index[idx] = os.path.basename(fname)
+        
+        idx += 1
+        
+    unique_words_all = set(dict_global.keys()) # BAD PRACTICE
     
-unique_words_all = set(dict_global.keys())
-
+            
+    #linked_list_data = {}
+    for word in unique_words_all:
+        linked_list_data[word] = SlinkedList()
+        linked_list_data[word].head = Node(1,Node)
         
-linked_list_data = {}
-for word in unique_words_all:
-    linked_list_data[word] = SlinkedList()
-    linked_list_data[word].head = Node(1,Node)
+    #word_freq_in_doc = {}
+    idx = 1
     
-word_freq_in_doc = {}
-idx = 1
-
-for file in glob.glob(file_folder):
-    file = open(file, "r")
-    text = file.read()
-    text = remove_special_characters(text)
-    text = re.sub(re.compile('\d'),'',text)
-    sentences = sent_tokenize(text)
-    words = word_tokenize(text)
-    words = [word for word in words if len(words)>1]
-    words = [word.lower() for word in words]
-    words = [word for word in words if word not in Stopwords]
-    word_freq_in_doc = finding_all_unique_words_and_freq(words)
-
-    for word in word_freq_in_doc.keys():
-        linked_list = linked_list_data[word].head
-        while linked_list.nextval is not None:
-            linked_list = linked_list.nextval
-        linked_list.nextval = Node(idx ,word_freq_in_doc[word])
-    idx = idx + 1
+    for file in glob.glob(file_folder):
+        file = open(file, "r")
+        text = file.read()
+        text = remove_special_characters(text)
+        text = re.sub(re.compile('\d'),'',text)
+        
+        sentences = sent_tokenize(text)
+        
+        words = word_tokenize(text)
+        words = [word for word in words if len(words)>1]
+        words = [word.lower() for word in words]
+        words = [word for word in words if word not in Stopwords]
+        word_freq_in_doc = finding_all_unique_words_and_freq(words)
     
-query = input('Enter your query:')
-query = word_tokenize(query) #tokenize provided by NLTK
+        for word in word_freq_in_doc.keys():
+            linked_list = linked_list_data[word].head
+            while linked_list.nextval is not None:
+                linked_list = linked_list.nextval
+            linked_list.nextval = Node(idx ,word_freq_in_doc[word])
+        idx += 1
 
-connecting_words = []
-cnt = 1
 
-different_words = []
+# query function starts here--------------------------------------------------
 
-for word in query:
-    if word.lower() != "and" and word.lower() != "or" and word.lower() != "not":
-        different_words.append(word.lower())
-    else:
-        connecting_words.append(word.lower())
-        
-print("Connecting Words: \n", connecting_words)
-total_files = len(files_with_index)
-
-zeroes_and_ones = []
-zeroes_and_ones_of_all_words = []
-for word in (different_words):
-    if word.lower() in unique_words_all:
-        zeroes_and_ones = [0] * total_files
-        linkedlist = linked_list_data[word].head
-        print("word: ", word)
-        while linkedlist.nextval is not None:
-            zeroes_and_ones[linkedlist.nextval.doc - 1] = 1
-            linkedlist = linkedlist.nextval
-        zeroes_and_ones_of_all_words.append(zeroes_and_ones)
-    else:
-        print(word," not found")
-        sys.exit()
-        
-
-for word in connecting_words:
-    word_list1 = zeroes_and_ones_of_all_words[0]
-    word_list2 = zeroes_and_ones_of_all_words[1]
-    if word == "and":
-        bitwise_op = [w1 & w2 for (w1,w2) in zip(word_list1,word_list2)]
-        zeroes_and_ones_of_all_words.remove(word_list1)
-        zeroes_and_ones_of_all_words.remove(word_list2)
-        zeroes_and_ones_of_all_words.insert(0, bitwise_op);
-    elif word == "or":
-        bitwise_op = [w1 | w2 for (w1,w2) in zip(word_list1,word_list2)]
-        zeroes_and_ones_of_all_words.remove(word_list1)
-        zeroes_and_ones_of_all_words.remove(word_list2)
-        zeroes_and_ones_of_all_words.insert(0, bitwise_op);
-    elif word == "not":
-        bitwise_op = [not w1 for w1 in word_list2]
-        bitwise_op = [int(b == True) for b in bitwise_op]
-        zeroes_and_ones_of_all_words.remove(word_list2)
-        zeroes_and_ones_of_all_words.remove(word_list1)
-        bitwise_op = [w1 & w2 for (w1,w2) in zip(word_list1,bitwise_op)]
-        
-        zeroes_and_ones_of_all_words.insert(0, bitwise_op);
-        
-files = []    
-print("zeros and ones of all words in query: \n", zeroes_and_ones_of_all_words)
-lis = zeroes_and_ones_of_all_words[0]
-cnt = 1
-for index in lis:
-    if index == 1:
-        files.append(files_with_index[cnt])
-    cnt = cnt+1
+def my_query(query):
+    query = word_tokenize(query) #tokenize provided by NLTK
     
-print("files where query is found: \n", files)
+    connecting_words = []
+    cnt = 1
+    
+    different_words = []
+    
+    for word in query:
+        if word.lower() != "and" and word.lower() != "or" and word.lower() != "not":
+            different_words.append(word.lower())
+        else:
+            connecting_words.append(word.lower())
+            
+    print("Connecting Words: \n", connecting_words)
+    total_files = len(files_with_index)
+    
+    zeroes_and_ones = []
+    zeroes_and_ones_of_all_words = []
+    for word in (different_words):
+        if word.lower() in unique_words_all:
+            zeroes_and_ones = [0] * total_files
+            linkedlist = linked_list_data[word].head
+            print("word: ", word)
+            while linkedlist.nextval is not None:
+                zeroes_and_ones[linkedlist.nextval.doc - 1] = 1
+                linkedlist = linkedlist.nextval
+            zeroes_and_ones_of_all_words.append(zeroes_and_ones)
+        else:
+            print(word," not found")
+            return
+            #sys.exit() yeah ok...
+            
+    
+    for word in connecting_words:
+        word_list1 = zeroes_and_ones_of_all_words[0]
+        word_list2 = zeroes_and_ones_of_all_words[1]
+        if word == "and":
+            bitwise_op = [w1 & w2 for (w1,w2) in zip(word_list1,word_list2)]
+            zeroes_and_ones_of_all_words.remove(word_list1)
+            zeroes_and_ones_of_all_words.remove(word_list2)
+            zeroes_and_ones_of_all_words.insert(0, bitwise_op);
+        elif word == "or":
+            bitwise_op = [w1 | w2 for (w1,w2) in zip(word_list1,word_list2)]
+            zeroes_and_ones_of_all_words.remove(word_list1)
+            zeroes_and_ones_of_all_words.remove(word_list2)
+            zeroes_and_ones_of_all_words.insert(0, bitwise_op);
+        elif word == "not":
+            bitwise_op = [not w1 for w1 in word_list2]
+            bitwise_op = [int(b == True) for b in bitwise_op]
+            zeroes_and_ones_of_all_words.remove(word_list2)
+            zeroes_and_ones_of_all_words.remove(word_list1)
+            bitwise_op = [w1 & w2 for (w1,w2) in zip(word_list1,bitwise_op)]
+            
+            zeroes_and_ones_of_all_words.insert(0, bitwise_op);
+            
+    files = []
+    print("zeros and ones of all words in query: \n", zeroes_and_ones_of_all_words)
+    lis = zeroes_and_ones_of_all_words[0]
+    cnt = 1
+    for index in lis:
+        if index == 1:
+            #files.append(files_with_index[cnt])  # BROKE
+            cnt = cnt+1 #UNINDENT 1
+        
+    print("files where query is found: \n", files)
+    
+    #print("number of unique words in all documents: ", len(unique_words_all))  # BROKE
+    print("Total number of words encountered: ", )
 
-print("number of unique words in all documents: ", len(unique_words_all))
-print("Total number of words encountered: ", )
+# Query test through cmd
+def search_cmdLine_event():
+    query = input('Enter your query:')
+    my_query(query)
+    
+# Query through gui
+def search_button_event():
+    print("placeholder")
+    #my_query(searchText.toPlainText())
+
+# connect
+
+#searchButton.clicked.connect(lambda: search_button_event())
+
+
+# EXEC
+
+the_whole_program()
+
+app.exec_()
+
+
