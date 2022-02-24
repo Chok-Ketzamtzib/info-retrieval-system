@@ -24,6 +24,7 @@ def finding_all_unique_words_and_freq(words):
     for word in words_unique:
         word_freq[word] = words.count(word)
     return word_freq
+
 def finding_freq_of_word_in_doc(word,words):
     freq = words.count(word)
         
@@ -42,10 +43,11 @@ class SlinkedList:
     def __init__(self ,head = None):
         self.head = head
         
-        
+ #find unique words from each doc in the dataset       
 all_words = []
 dict_global = {}
 file_folder = 'data/*'
+
 idx = 1
 files_with_index = {}
 for file in glob.glob(file_folder):
@@ -71,8 +73,10 @@ linked_list_data = {}
 for word in unique_words_all:
     linked_list_data[word] = SlinkedList()
     linked_list_data[word].head = Node(1,Node)
+    
 word_freq_in_doc = {}
 idx = 1
+
 for file in glob.glob(file_folder):
     file = open(file, "r")
     text = file.read()
@@ -93,16 +97,21 @@ for file in glob.glob(file_folder):
     
 query = input('Enter your query:')
 query = word_tokenize(query)
+
 connecting_words = []
 cnt = 1
+
 different_words = []
+
 for word in query:
     if word.lower() != "and" and word.lower() != "or" and word.lower() != "not":
         different_words.append(word.lower())
     else:
         connecting_words.append(word.lower())
+        
 print("Connecting Words: \n", connecting_words)
 total_files = len(files_with_index)
+
 zeroes_and_ones = []
 zeroes_and_ones_of_all_words = []
 for word in (different_words):
@@ -139,7 +148,7 @@ for word in connecting_words:
         zeroes_and_ones_of_all_words.remove(word_list1)
         bitwise_op = [w1 & w2 for (w1,w2) in zip(word_list1,bitwise_op)]
         
-        zeroes_and_ones_of_all_words.insert(0, bitwise_op);
+zeroes_and_ones_of_all_words.insert(0, bitwise_op);
         
 files = []    
 print("zeros and ones of all words in query: \n", zeroes_and_ones_of_all_words)
@@ -151,3 +160,4 @@ for index in lis:
     cnt = cnt+1
     
 print("files where query is found: \n", files)
+print("frequency of query words", cnt)
