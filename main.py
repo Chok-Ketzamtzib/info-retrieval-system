@@ -2,7 +2,25 @@
 """
 Created on Sat Feb 12 23:11:28 2022
 
-@author: wakef
+@author: William J. Wakefield
+@author: CJ Bauer
+
+The system should:
+o Create the inverted index (the dictionary and postings lists) for your collection of documents
+o Parse and execute simple queries
+o Perform simple tokenization and normalization of the text such as removing digits, punctuation
+marks, etc.
+o Statistics:
+1) Report the number of distinct words observed in each document, and the total number of
+words encountered.
+2) Report the number of distinct words observed in the whole collection of documents, and the
+total number of words encountered.
+3) Report the total number of times each word is seen (term frequency) and the document IDs
+where the word occurs (Output the posting list for a term).
+4) Report the top 100th, 500th, and 1000th most-frequent word and their frequencies of
+occurrence.
+5) Create postings and assign a term frequency to every document in postings list.
+6) Provide a simple GUI to test the system.
 """
 import nltk
 from nltk.corpus import stopwords
@@ -12,9 +30,28 @@ import glob
 import re
 import os
 import numpy as np
+from PyQt5.QtWidgets import QMainWindow, QApplication, QLabel, QTextEdit, QPushButton
+from PyQt5 import uic
 import sys
+
 Stopwords = set(stopwords.words('english'))
 
+
+class UI(QMainWindow):
+    def __init__(self):
+        super(UI, self).__init__()
+        
+        #Load UI file
+        uic.loadUi("IRSystem.ui", self)
+        
+        #Show the app
+        self.show()
+    
+    
+#initialize app
+app = QApplication(sys.argv)
+UIWindow = UI()
+app.exec_()
 def finding_all_unique_words_and_freq(words):
     words_unique = []
     word_freq = {}
@@ -55,7 +92,7 @@ for file in glob.glob(file_folder):
     fname = file
     file = open(file , "r")
     text = file.read()
-    text = remove_special_characters(text)
+    text = remove_special_characters(text) 
     text = re.sub(re.compile('\d'),'',text)
     sentences = sent_tokenize(text)
     words = word_tokenize(text)
@@ -88,6 +125,7 @@ for file in glob.glob(file_folder):
     words = [word.lower() for word in words]
     words = [word for word in words if word not in Stopwords]
     word_freq_in_doc = finding_all_unique_words_and_freq(words)
+
     for word in word_freq_in_doc.keys():
         linked_list = linked_list_data[word].head
         while linked_list.nextval is not None:
@@ -96,7 +134,7 @@ for file in glob.glob(file_folder):
     idx = idx + 1
     
 query = input('Enter your query:')
-query = word_tokenize(query)
+query = word_tokenize(query) #tokenize provided by NLTK
 
 connecting_words = []
 cnt = 1
@@ -148,7 +186,7 @@ for word in connecting_words:
         zeroes_and_ones_of_all_words.remove(word_list1)
         bitwise_op = [w1 & w2 for (w1,w2) in zip(word_list1,bitwise_op)]
         
-zeroes_and_ones_of_all_words.insert(0, bitwise_op);
+        zeroes_and_ones_of_all_words.insert(0, bitwise_op);
         
 files = []    
 print("zeros and ones of all words in query: \n", zeroes_and_ones_of_all_words)
@@ -160,4 +198,6 @@ for index in lis:
     cnt = cnt+1
     
 print("files where query is found: \n", files)
-print("frequency of query words", cnt)
+
+print("number of unique words in all documents: ", len(unique_words_all))
+print("Total number of words encountered: ", )
